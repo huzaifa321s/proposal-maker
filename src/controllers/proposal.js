@@ -66,4 +66,42 @@ console.log('clientName',clientName)
         });
     }
 }
-export { createProposal }
+
+
+ const getAllProposals = async (req, res) => {
+  try {
+      console.log('hi')
+    // page aur limit query params se lo
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    // skip logic
+    const skip = (page - 1) * limit;
+
+    // total proposals count
+    const totalProposals = await proposal.countDocuments();
+
+    // proposals data
+    const proposals = await proposal.find()
+      .sort({ createdAt: -1 }) // latest first
+      .skip(skip)
+      .limit(limit);
+
+    // response
+    return res.status(200).json({
+      success: true,
+      message: "Proposals fetched successfully",
+      currentPage: page,
+      totalPages: Math.ceil(totalProposals / limit),
+      totalProposals,
+      proposals,
+    });
+  } catch (error) {
+    console.error("Error fetching proposals:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export { createProposal,getAllProposals }
