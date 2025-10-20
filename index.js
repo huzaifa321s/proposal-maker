@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
 import profileRoutes from './src/routes/profile.js';
 import proposalRoutes from './src/routes/proposal.js';
-import serverless from "serverless-http";
+import ServerlessHttp from "serverless-http";
 
 // Load environment variables
 dotenv.config();
@@ -26,4 +26,4 @@ app.use('/api/proposals', proposalRoutes);
 
 // **Remove app.listen()**
 // Export handler for Vercel
-export const handler = serverless(app);
+export const handler = ServerlessHttp(app);
