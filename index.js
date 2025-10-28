@@ -5,10 +5,10 @@ import dotenv from 'dotenv';
 import Pusher from 'pusher';
 import { createClient } from '@deepgram/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import connectDB from '../src/config/db.js';
-import profileRoutes from '../src/routes/profile.js';
-import proposalRoutes from '../src/routes/proposal.js';
-import transcribeRoute from '../src/routes/transcribe.js';
+import profileRoutes from './src/routes/profile.js';
+import proposalRoutes from './src/routes/proposal.js';
+import transcribeRoute from './src/routes/transcribe.js';
+import connectDB from './src/config/db.js';
 
 dotenv.config();
 
