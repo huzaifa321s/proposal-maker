@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false
+  },
+  "nodeModulesDir": "none",
+  "unstable": [
+    "byonm",
+    "compat"
+  ],
+  "compat": {
+    "node": true
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --watch main.ts",
+    "start": "deno run --allow-net --allow-env main.ts"
+  }
+}
