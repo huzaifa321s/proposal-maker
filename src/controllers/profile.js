@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose"
-import Admin from "../models/Admin.js";
+import Admin from "../models/admin.js";
 const getCreds = async (req, res) => {
     try {
         const data = await Admin.findOne();
