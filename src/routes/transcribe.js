@@ -7,15 +7,11 @@ import { extractBusinessInfo } from "../controllers/nlp.js";
 import { sendSSE, initSSE } from "../utils/sse.js";
 
 const router = express.Router();// transcribe.js
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // <-- YEH GALAT HAI VERCEL PE
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+// Memory mein store karo (disk nahi)
+const upload = multer({
+  storage: multer.memoryStorage(), // <-- YEH SAHI HAI
+  limits: { fileSize: 60 * 1024 * 1024 }, // 60MB
 });
-const upload = multer({ storage });
 
 // 🧩 Step 1: Client connects for SSE
 router.get("/sse", (req, res) => {
