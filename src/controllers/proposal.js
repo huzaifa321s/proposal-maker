@@ -70,7 +70,7 @@ console.log('clientName',clientName)
 
  const getAllProposals = async (req, res) => {
   try {
-      console.log('hi')
+
     // page aur limit query params se lo
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;

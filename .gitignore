@@ -3,3 +3,5 @@ node_modules
 .env
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
+
+.vercel
