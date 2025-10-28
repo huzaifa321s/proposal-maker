@@ -22,7 +22,7 @@ app.use(cors({
 app.use(express.json({ limit: '60mb' }));
 app.use(express.urlencoded({ limit: '60mb', extended: true }));
 
-// Connect DB
+// Connect DB 
 connectDB();
 
 // Pusher
