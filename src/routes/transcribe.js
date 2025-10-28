@@ -7,8 +7,7 @@ import { extractBusinessInfo } from "../controllers/nlp.js";
 import { sendSSE, initSSE } from "../utils/sse.js";
 
 const router = express.Router();
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ dest: "uploads/" });
 
 // 🧩 Step 1: Client connects for SSE
 router.get("/sse", (req, res) => {
