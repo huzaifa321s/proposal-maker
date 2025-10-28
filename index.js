@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "https://esm.sh/express@4.19.2?target=deno&deps=node:http,node:stream,node:path&no-check";
 import cors from 'cors';
 import dotenv from 'dotenv';
 import Pusher from 'pusher';
