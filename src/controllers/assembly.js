@@ -2,70 +2,63 @@
 import axios from "axios";
 import fs from "fs";
 
-const DEEPGRAM_API = "https://api.deepgram.com/v1/listen";
+const ASSEMBLY_API = "https://api.assemblyai.com/v2";
 
-/**
- * Step 1: Return file path
- */
+
 export async function uploadToAssemblyAI(filePath) {
-  console.log("File ready for Deepgram:", filePath);
-  if (!fs.existsSync(filePath)) throw new Error("File not found: " + filePath);
-  return filePath;
+    const headers = {
+  authorization: process.env.ASSEMBLYAI_API_KEY,
+  "content-type": "application/json",
+};
+  const response = await axios.post(
+    `${ASSEMBLY_API}/upload`,
+    fs.createReadStream(filePath),
+    { headers: { authorization: process.env.ASSEMBLYAI_API_KEY } }
+  );
+  return response.data.upload_url;
+}
+export async function transcribeAudio(uploadUrl) {
+    const headers = {
+  authorization: process.env.ASSEMBLYAI_API_KEY,
+  "content-type": "application/json",
+};
+    console.log(process.env.ASSEMBLYAI_API_KEY)
+    console.log("headers",headers)
+  const response = await axios.post(
+    `${ASSEMBLY_API}/transcript`,
+    {
+      audio_url: uploadUrl,
+      speaker_labels: true,
+      punctuate: true,
+      format_text: true,
+      speech_understanding: {
+        request: {
+          translation: {
+            target_languages: ["en"],
+            formal: false,
+          },
+        },
+      },
+    },
+    { headers }
+  );
+  return response.data.id;
 }
 
-/**
- * Step 2: Urdu Audio → Roman Urdu (Auto-detect + Diarization)
- */
-export async function transcribeAudio(filePath, sendProgress) {
-  const DG_KEY = process.env.DEEPGRAM_API_KEY;
-  if (!DG_KEY) throw new Error("Missing DEEPGRAM_API_KEY");
 
-  if (!fs.existsSync(filePath)) throw new Error("File not found: " + filePath);
-  sendProgress("transcription_status", { status: "Transcription Started" });
-  try {
-    console.log("Sending to Deepgram (Auto-detect Urdu → Roman Urdu)...");
+export async function waitForTranscript(id, sendProgress) {
+    const headers = {
+  authorization: process.env.ASSEMBLYAI_API_KEY,
+  "content-type": "application/json",
+};
+while (true) {
+      sendProgress("pipeline_status", { step: "Transripting..." });
 
-    const response = await axios({
-      method: "POST",
-      url: DEEPGRAM_API,
-      headers: {
-        Authorization: `Token ${DG_KEY}`,
-        "Content-Type": "audio/*",
-      },
-      params: {
-        model: "nova-2",           // Only supported model
-        // language: "ur",         // ← REMOVE (not supported)
-        diarize: true,             // Speaker labels
-        smart_format: true,        // Punctuation, numbers
-        // translate: true,        // ← NOT SUPPORTED
-      },
-      data: fs.createReadStream(filePath),
-      maxBodyLength: Infinity,
-      timeout: 300000,
-    });
-    sendProgress("transcription_status", { status: "Transcripting..." });
-    const result = response.data.results;
-    let romanUrduText = "";
+    const res = await axios.get(`${ASSEMBLY_API}/transcript/${id}`, { headers });
+    sendProgress("transcription_status", { status: res.data.status });
 
-    if (result?.utterances?.length > 0) {
-      result.utterances.forEach((u) => {
-        romanUrduText += `\nSpeaker ${u.speaker}: ${u.transcript}`;
-      });
-    } else {
-      const alt = result?.channels?.[0]?.alternatives?.[0];
-      romanUrduText = alt?.transcript || "No speech detected.";
-    }
-
-    console.log("Deepgram SUCCESS! (Auto-detected Urdu → Roman Urdu)");
-    console.log(romanUrduText.trim());
-    sendProgress("transcription_status", { status: "Transcripting..." });
-    return {
-      text: romanUrduText.trim(),
-      raw: response.data,
-    };
-  } catch (error) {
-    console.error("Deepgram Error:", error.response?.data || error.message);
-    throw error;
+    if (res.data.status === "completed") return res.data;
+    if (res.data.status === "error") throw new Error(res.data.error);
+    await new Promise((r) => setTimeout(r, 3000));
   }
 }
-

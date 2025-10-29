@@ -37,7 +37,7 @@ Output only the cleaned English transcript with speaker labels.
     const response = await axios.post(
       GROQ_API,
       {
-        model: "llama-3.1-8b-instant", // ← Updated (replacement for llama3-8b-8192)
+        model: "llama-3.1-8b-instant",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 2048,
         temperature: 0.3,
