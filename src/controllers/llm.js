@@ -1,41 +1,63 @@
-// src/services/llmService.js
+// src/services/gladiaService.js
 import axios from "axios";
 
-const LLM_GATEWAY = "https://llm-gateway.assemblyai.com/v1/chat/completions";
+const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 
-
+/**
+ * polishWithLLM (Groq version)
+ * Uses Groq + Llama 3.1 to translate Roman Urdu → Natural English + polish
+ * Function name same rakha hai
+ */
 export async function polishWithLLM(text, sendProgress) {
-  sendProgress("llm_status", { step: "Starting Urdu→English polish..." });
-const headers = {
-  authorization: process.env.ASSEMBLYAI_API_KEY,
-  "content-type": "application/json",
-};
+  const GROQ_KEY = process.env.GROQ_API_KEY;
+  sendProgress("llm_status", { step: "Starting Urdu→English translation with Groq..." });
+
+  if (!GROQ_KEY) {
+    console.warn("Warning: GROQ_API_KEY missing. Skipping polish.");
+    sendProgress("llm_status", { step: "LLM polish skipped" });
+    return text;
+  }
+
   const prompt = `
-You are a professional linguist and translator.
-The following text is a transcript containing Urdu sentences written in Roman Urdu.
-Translate all Urdu to fluent English.
-Keep speaker labels like "Speaker 0:" and "Speaker 1:".
-Fix grammar and punctuation, but do not change meaning.
+You are a professional translator and editor.
+
+Task:
+1. Convert this Roman Urdu transcript to natural, fluent English.
+2. Keep speaker labels (Speaker 0, Speaker 1, etc.).
+3. Fix grammar, punctuation, and flow.
+4. Do not add or remove meaning.
 
 Transcript:
 ${text}
+
+Output only the cleaned English transcript with speaker labels.
 `;
 
-  const body = {
-    model: "gpt-4.1",
-    messages: [{ role: "user", content: prompt }],
-    max_tokens: 2000,
-    temperature: 0.3,
-  };
-
   try {
-    const resp = await axios.post(LLM_GATEWAY, body, { headers });
-    const content = resp.data.choices?.[0]?.message?.content?.trim() || "";
-    sendProgress("llm_status", { step: "Polishing complete" });
-    return content || text;
+    const response = await axios.post(
+      GROQ_API,
+      {
+        model: "llama-3.1-8b-instant", // ← Updated (replacement for llama3-8b-8192)
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 2048,
+        temperature: 0.3,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${GROQ_KEY}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 60000,
+      }
+    );
+
+    const polished = response.data.choices[0].message.content.trim();
+    sendProgress("llm_status", { step: "Translation & polish complete" });
+    console.log("Groq Polish SUCCESS!");
+    return polished;
   } catch (err) {
-    console.error("LLM polish error:", err.response?.data || err.message);
+    console.error("Groq LLM Error:", err.response?.data || err.message);
     sendProgress("llm_status", { step: "LLM polish failed" });
-    return text;
+    return text; // Fallback
   }
 }

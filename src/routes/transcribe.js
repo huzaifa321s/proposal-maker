@@ -1,17 +1,13 @@
 import express from "express";
 import multer from "multer";
 import fs from "fs";
-import { transcribeAudio, uploadToAssemblyAI, waitForTranscript } from "../controllers/assembly.js";
+import { transcribeAudio, uploadToAssemblyAI } from "../controllers/assembly.js";
 import { polishWithLLM } from "../controllers/llm.js";
 import { extractBusinessInfo } from "../controllers/nlp.js";
 import { sendSSE, initSSE } from "../utils/sse.js";
 
-const router = express.Router();// transcribe.js
-// Memory mein store karo (disk nahi)
-const upload = multer({
-  storage: multer.memoryStorage(), // <-- YEH SAHI HAI
-  limits: { fileSize: 60 * 1024 * 1024 }, // 60MB
-});
+const router = express.Router();
+const upload = multer({ dest: "uploads/" });
 
 // 🧩 Step 1: Client connects for SSE
 router.get("/sse", (req, res) => {
@@ -28,19 +24,31 @@ router.post("/", upload.single("file"), async (req, res) => {
     const uploadUrl = await uploadToAssemblyAI(filePath);
     sendSSE("upload_status", { step: "Upload complete" });
 
-    const transcriptId = await transcribeAudio(uploadUrl);
-    sendSSE("transcription_status", { step: "Transcription started" });
-
-    const result = await waitForTranscript(transcriptId,sendSSE);
-    fs.unlinkSync(filePath);
+    const transcription = await transcribeAudio(uploadUrl, sendSSE);
+    console.log('transcription', transcription)
+    sendSSE("transcription_status", { status: "completed" });
 
     let translatedText = "";
-    result.utterances?.forEach((u) => {
-      translatedText += `\nSpeaker ${u.speaker}: ${u.translated_texts?.en || u.text}`;
-    });
+
+
+    if (transcription.raw?.results?.utterances?.length > 0) {
+      transcription.raw.results.utterances.forEach((u) => {
+        translatedText += `\nSpeaker ${u.speaker}: ${u.transcript}`;
+      });
+    }
+
+    else if (transcription.text) {
+      translatedText = transcription.text;
+    }
+    // Fallback
+    else {
+      translatedText = "No transcript available.";
+    }
+
+    console.log("Formatted Transcript:\n", translatedText.trim());
 
     sendSSE("pipeline_status", { step: "Polishing transcript..." });
-    const polished = await polishWithLLM(translatedText,sendSSE);
+    const polished = await polishWithLLM(translatedText, sendSSE);
     sendSSE("pipeline_status", { step: "Extracting business details..." });
     const extracted = await extractBusinessInfo(polished);
 
