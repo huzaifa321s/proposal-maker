@@ -19,7 +19,7 @@ router.get("/sse", (req, res) => {
 router.post("/", upload.single("file"), async (req, res) => {
   try {
     const filePath = req.file.path;
-    sendSSE("upload_status", { step: "Uploading to AssemblyAI..." });
+    sendSSE("upload_status", { step: "Uploading..." });
 
     const uploadUrl = await uploadToAssemblyAI(filePath);
     sendSSE("upload_status", { step: "Upload complete" });

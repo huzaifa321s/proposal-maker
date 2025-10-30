@@ -18,20 +18,33 @@ export async function polishWithLLM(text, sendProgress) {
     return text;
   }
 
+
+  const maxInputTokens = 3000;
+let shortTranscript = text;
+if (text.length > maxInputTokens * 4) {
+  shortTranscript = text.substring(0, maxInputTokens * 4) + "... [truncated]";
+}
+
   const prompt = `
-You are a professional translator and editor.
+You are a professional translator, editor, and linguistic expert with strong knowledge of Roman Urdu and English.
 
 Task:
-1. Convert this Roman Urdu transcript to natural, fluent English.
-2. Keep speaker labels (Speaker 0, Speaker 1, etc.).
-3. Fix grammar, punctuation, and flow.
-4. Do not add or remove meaning.
+1. Convert the Roman Urdu transcript to natural, fluent, professional English.
+2. Keep speaker labels exactly as: Speaker 0, Speaker 1, etc.
+3. Fix grammar, punctuation, sentence structure, and flow.
+4. **Correct misspelled or phonetically written words** by replacing them with the **most likely correct English word** based on:
+   - **Sound similarity** (e.g., "baje" → "o'clock", "kaha" → "said")
+   - **Context** (e.g., "trafik" → "traffic", "meating" → "meeting")
+   - **Common Roman Urdu patterns** (e.g., "hn" → "yes", "nhn" → "no")
+5. Do **not** add, remove, or change the original meaning.
+6. Output only the corrected English transcript with speaker labels.
 
 Transcript:
 ${text}
-
 Output only the cleaned English transcript with speaker labels.
+Return only the final English version. No explanations.
 `;
+
 
   try {
     const response = await axios.post(
