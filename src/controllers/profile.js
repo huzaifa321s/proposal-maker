@@ -1,12 +1,11 @@
 
-import mongoose from "mongoose"
-import Admin from "../models/admin.js";
+import user from "../models/user.js";
 const getCreds = async (req, res) => {
     try {
-        const data = await Admin.findOne();
+        const data = await user.findOne({_id:req.user.id});
         console.log('data',data)
         return res.status(200).json({
-            message: "Admin found",
+            message: "user found",
             success: true,
             data
         });

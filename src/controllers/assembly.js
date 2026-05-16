@@ -31,14 +31,7 @@ export async function transcribeAudio(uploadUrl) {
       speaker_labels: true,
       punctuate: true,
       format_text: true,
-      speech_understanding: {
-        request: {
-          translation: {
-            target_languages: ["en"],
-            formal: false,
-          },
-        },
-      },
+      language_detection: true,
     },
     { headers }
   );
@@ -56,7 +49,7 @@ export async function waitForTranscript(id, sendProgress) {
 
     const res = await axios.get(`${ASSEMBLY_API}/transcript/${id}`, { headers });
     sendProgress("transcription_status", { status: res.data.status });
-
+    console.log('res.data', res.data)
     if (res.data.status === "completed") {
       sendProgress("pipeline_status", { step: "Transription Completed" });
       return res.data

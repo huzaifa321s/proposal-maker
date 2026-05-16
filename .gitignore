@@ -1,7 +1,22 @@
+# Dependencies
+node_modules/
 
-node_modules
+# Environment variables
 .env
-#Ignore vscode AI rules
-.github\instructions\codacy.instructions.md
+.env.local
+.env.production
 
-.vercel
+# Uploaded files (user content — not for version control)
+uploads/
+temp/
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
